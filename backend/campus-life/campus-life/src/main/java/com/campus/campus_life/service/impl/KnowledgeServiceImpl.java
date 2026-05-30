@@ -1,4 +1,45 @@
 package com.campus.campus_life.service.impl;
 
-public class KnowledgeServiceImpl {
+import com.campus.campus_life.entity.Knowledge;
+import com.campus.campus_life.mapper.KnowledgeMapper;
+import com.campus.campus_life.service.KnowledgeService;
+import jakarta.annotation.Resource;
+import org.springframework.stereotype.Service;
+import java.util.List;
+
+@Service
+public class KnowledgeServiceImpl implements KnowledgeService {
+
+    @Resource
+    private KnowledgeMapper knowledgeMapper;
+
+    @Override
+    public List<Knowledge> list() {
+        return knowledgeMapper.list();
+    }
+
+    @Override
+    public List<Knowledge> listByCategory(Long categoryId) {
+        return knowledgeMapper.selectByCategoryId(categoryId);
+    }
+
+    @Override
+    public List<Knowledge> search(String keyword) {
+        return knowledgeMapper.search(keyword);
+    }
+
+    @Override
+    public Knowledge getById(Long id) {
+        return knowledgeMapper.selectById(id);
+    }
+
+    @Override
+    public List<Knowledge> listHot() {
+        return knowledgeMapper.listHot();
+    }
+
+    @Override
+    public void increaseViewCount(Long id) {
+        knowledgeMapper.increaseViewCount(id);
+    }
 }
