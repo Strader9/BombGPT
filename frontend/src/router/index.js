@@ -1,19 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/HomeView.vue'
 import Login from '../views/LoginView.vue'
+import Register from '../views/RegisterView.vue'
+import Forget from '../views/ForgetView.vue'
+import Chat from '../views/ChatView.vue'
 
 const routes = [
-  {
-    path: '/',
-    name: 'Home',
-    component: Home,
-    meta: { requiresAuth: true } // 需要登录
-  },
-  {
-    path: '/login',
-    name: 'Login',
-    component: Login
-  }
+  { path: '/', name: 'Home', component: Home, meta: { requiresAuth: true } },
+  { path: '/login', component: Login },
+  { path: '/register', component: Register },
+  { path: '/forget', component: Forget },
+  { path: '/chat', component: Chat, meta: { requiresAuth: true } },
+  { path: '/admin',name: 'Admin',component: () => import('../views/AdminView.vue'),meta: { requiresAuth: true, requiresAdmin: true }},
 ]
 
 const router = createRouter({
@@ -21,23 +19,28 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫（实现：关闭网页再打开必须重新登录）
 router.beforeEach((to, from, next) => {
-  // 从 sessionStorage 取 token（关闭网页自动清空）
   const token = sessionStorage.getItem('token')
+  const role = sessionStorage.getItem('role')
 
-  // 需要登录，但没有 token → 跳登录页
-  if (to.meta.requiresAuth && !token) {
-    next('/login')
+  // 1. 未登录：只能进登录/注册，其他跳登录
+  if (!token && to.path !== '/login' && to.path !== '/register') {
+    return next('/login')
   }
-  // 已经登录，还想访问 login 页 → 重定向回首页
-  else if (to.path === '/login' && token) {
-    next('/')
+
+  // 2. 已登录：访问登录页自动跳到聊天页
+  if (token && to.path === '/login') {
+    return next('/chat')
   }
-  // 正常放行
-  else {
-    next()
+
+  // 3. 普通用户不能进 /admin 开头的页面
+  if (to.path.startsWith('/admin') && role !== 'ADMIN') {
+    alert('无权限')
+    return next('/chat')
   }
+
+  // 其他情况放行
+  next()
 })
 
 export default router

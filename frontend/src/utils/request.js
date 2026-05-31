@@ -26,4 +26,12 @@ request.interceptors.response.use(
   }
 )
 
+axios.interceptors.request.use(config => {
+  const token = sessionStorage.getItem('token')
+  if (token) {
+    config.headers.token = token
+  }
+  return config
+})
+
 export default request

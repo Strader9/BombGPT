@@ -19,15 +19,14 @@
       </div>
     </div>
 
-    <!-- 分类列表 -->
+    <!-- 分类列表 ===================== 这里改动 ===================== -->
     <div class="category-list">
       <h2>校园分类</h2>
       <div
         v-for="item in categoryList"
         :key="item.id"
         class="category-item"
-        :class="{ active: selectedCategoryId === item.id }"
-        @click="selectCategory(item.id)"
+        @click="goToDetail(item.id, item.name)"
       >
         {{ item.name }}
       </div>
@@ -88,18 +87,14 @@ const loadHot = async () => {
   }
 }
 
-// 当前选中分类
-const selectedCategoryId = ref(null)
-const selectCategory = (id) => {
-  selectedCategoryId.value = selectedCategoryId.value === id ? null : id
-  loadKnowledge(selectedCategoryId.value)
+// ====================== 跳转新页面 ======================
+const goToDetail = (id, name) => {
+  router.push(`/detail/${id}/${name}`)
 }
 
 // ====================== 退出登录 ======================
 const handleLogout = () => {
-  // 清除登录状态（关闭网页就失效）
   sessionStorage.removeItem('token')
-  // 跳回登录页
   router.push('/login')
 }
 
