@@ -20,7 +20,7 @@ public interface KnowledgeMapper {
     List<Knowledge> selectByCategoryId(@Param("categoryId") Long categoryId);
 
     // 3. 搜索
-    @Select("SELECT * FROM knowledge WHERE question LIKE CONCAT('%', #{keyword}, '%')")
+    @Select("SELECT * FROM knowledge WHERE question LIKE CONCAT('%', #{keyword}, '%') OR answer LIKE CONCAT('%', #{keyword}, '%')")
     List<Knowledge> search(@Param("keyword") String keyword);
 
     // 4. 根据ID查询详情
