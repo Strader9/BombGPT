@@ -23,7 +23,22 @@ public class WebConfig implements WebMvcConfigurer {
                         "/user/login",
                         "/user/register",
                         "/user/send-code",
-                        "/user/reset-pwd"
+                        "/user/reset-pwd",
+
+                        "/api/login",
+
+                        "/ai/chat",
+                        "/chat/ask",
+                        "/test/ai",
+
+                        "/category/list",
+                        "/knowledge/list",
+                        "/knowledge/search",
+                        "/knowledge/hot",
+                        "/knowledge/detail",
+                        "/knowledge/category",
+
+                        "/error"
                 );
     }
 }

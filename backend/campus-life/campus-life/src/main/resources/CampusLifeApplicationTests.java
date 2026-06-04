@@ -11,3 +11,4 @@ class CampusLifeApplicationTests {
 	}
 
 }
+// 新增这个 Bean，让 Spring 管理 RestTemplate
