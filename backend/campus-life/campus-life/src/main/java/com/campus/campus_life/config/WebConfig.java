@@ -38,6 +38,15 @@ public class WebConfig implements WebMvcConfigurer {
                         "/knowledge/detail",
                         "/knowledge/category",
 
+                        "/feedback/submit",
+
+                        "/memory/conversation/create",
+                        "/memory/conversation/list",
+                        "/memory/conversation/update-title",
+                        "/memory/conversation/delete",
+                        "/memory/message/save",
+                        "/memory/message/list",
+
                         "/error"
                 );
     }

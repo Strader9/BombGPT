@@ -1,37 +1,48 @@
 import axios from 'axios'
 
 const request = axios.create({
-  baseURL: 'http://localhost:8080', // 后端地址
-  timeout: 5000
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  timeout: 30000
 })
 
-// 请求拦截器：带 token
-request.interceptors.request.use(config => {
-  const token = sessionStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
+// 请求拦截器
+request.interceptors.request.use(
+  config => {
+    const token = sessionStorage.getItem('token')
 
-// 响应拦截器：401 自动跳登录
-request.interceptors.response.use(
-  res => res,
-  err => {
-    if (err.response?.status === 401) {
-      sessionStorage.removeItem('token')
-      window.location.href = '/login'
+    // 关键：跳过 ngrok 免费版浏览器提示页
+    config.headers['ngrok-skip-browser-warning'] = 'true'
+
+    if (token) {
+      config.headers.token = token
+      config.headers.Authorization = `Bearer ${token}`
     }
-    return Promise.reject(err)
+
+    return config
+  },
+  error => {
+    return Promise.reject(error)
   }
 )
 
-axios.interceptors.request.use(config => {
-  const token = sessionStorage.getItem('token')
-  if (token) {
-    config.headers.token = token
+// 响应拦截器
+request.interceptors.response.use(
+  response => {
+    return response
+  },
+  error => {
+    console.error('接口请求失败：', error)
+
+    if (error.response && error.response.status === 401) {
+      alert('登录状态失效或无权限，请重新登录')
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('role')
+      sessionStorage.removeItem('username')
+      window.location.href = '/login'
+    }
+
+    return Promise.reject(error)
   }
-  return config
-})
+)
 
 export default request
