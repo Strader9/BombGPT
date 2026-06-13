@@ -20,6 +20,31 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     }
 
     @Override
+    public List<Knowledge> listPage(Integer pageNum, Integer pageSize) {
+        if (pageNum == null || pageNum < 1) {
+            pageNum = 1;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 50;
+        }
+
+        // 防止一次查太多导致公网超时
+        if (pageSize > 100) {
+            pageSize = 100;
+        }
+
+        int offset = (pageNum - 1) * pageSize;
+
+        return knowledgeMapper.listPage(offset, pageSize);
+    }
+
+    @Override
+    public int countAll() {
+        return knowledgeMapper.countAll();
+    }
+
+    @Override
     public List<Knowledge> listByCategory(Long categoryId) {
         return knowledgeMapper.selectByCategoryId(categoryId);
     }
@@ -62,5 +87,14 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     @Override
     public void delete(Long id) {
         knowledgeMapper.deleteById(id);
+    }
+
+    @Override
+    public List<Knowledge> adminSearch(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return knowledgeMapper.list();
+        }
+
+        return knowledgeMapper.adminSearch(keyword.trim());
     }
 }

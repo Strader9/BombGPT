@@ -9,6 +9,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+
 
 @RestController
 public class KnowledgeController {
@@ -43,11 +47,13 @@ public class KnowledgeController {
         return knowledgeService.getById(id);
     }
 
-    // ====================== 管理端接口 ======================
-
+    // 管理员分页查看知识库
     @GetMapping("/admin/knowledge/list")
-    public Map<String, Object> adminList(HttpServletRequest request) {
-
+    public Map<String, Object> adminList(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "20") Integer pageSize,
+            HttpServletRequest request
+    ) {
         if (!AuthUtil.isAdmin(request)) {
             return Map.of(
                     "code", "403",
@@ -58,7 +64,33 @@ public class KnowledgeController {
         return Map.of(
                 "code", "200",
                 "msg", "查询成功",
-                "data", knowledgeService.list()
+                "data", knowledgeService.listPage(pageNum, pageSize),
+                "total", knowledgeService.countAll(),
+                "pageNum", pageNum,
+                "pageSize", pageSize
+        );
+    }
+
+
+    // 管理员检索知识库
+    @GetMapping("/admin/knowledge/search")
+    public Map<String, Object> adminSearch(
+            @RequestParam(required = false) String keyword,
+            HttpServletRequest request
+    ) {
+        if (!AuthUtil.isAdmin(request)) {
+            return Map.of(
+                    "code", "403",
+                    "msg", "无管理员权限"
+            );
+        }
+
+        List<Knowledge> list = knowledgeService.adminSearch(keyword);
+
+        return Map.of(
+                "code", "200",
+                "msg", "查询成功",
+                "data", list
         );
     }
 

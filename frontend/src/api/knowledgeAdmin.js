@@ -1,10 +1,26 @@
 import request from '../utils/request'
 
-// 管理端：查询全部知识库
-export function getAdminKnowledgeList() {
+// 管理端：分页查询知识库
+export function getAdminKnowledgeList(pageNum = 1, pageSize = 50) {
   return request({
     url: '/admin/knowledge/list',
-    method: 'get'
+    method: 'get',
+    params: {
+      pageNum,
+      pageSize
+    }
+  })
+}
+
+// 管理端：检索知识库
+// 支持搜索：ID、分类ID、问题、答案、关键词、状态
+export function searchAdminKnowledge(keyword) {
+  return request({
+    url: '/admin/knowledge/search',
+    method: 'get',
+    params: {
+      keyword
+    }
   })
 }
 

@@ -2,7 +2,13 @@
   <div class="admin-page">
     <!-- 左侧栏 -->
     <aside class="admin-sidebar">
-      <h2>管理端</h2>
+     <div class="admin-logo-box">
+  <img
+    src="/bbg-logo.png"
+    alt="BBG Logo"
+    class="admin-logo"
+  />
+</div>
 
       <div
         class="admin-menu"
@@ -113,10 +119,10 @@
         v-if="activeMenu === 'knowledge'"
         class="admin-content"
       >
-        <div class="toolbar">
+        <div class="toolbar knowledge-toolbar">
           <button
             class="refresh-btn"
-            @click="loadKnowledge"
+            @click="resetKnowledgeSearch"
           >
             刷新知识库
           </button>
@@ -127,6 +133,38 @@
           >
             新增问答
           </button>
+
+          <input
+            v-model="knowledgeKeyword"
+            class="knowledge-search-input"
+            placeholder="输入ID、分类ID、问题、答案、关键词检索"
+            @keyup.enter="searchKnowledge"
+          />
+
+          <button
+            class="search-btn"
+            :disabled="knowledgeSearchLoading"
+            @click="searchKnowledge"
+          >
+            {{ knowledgeSearchLoading ? '搜索中...' : '搜索' }}
+          </button>
+
+          <button
+            class="reset-btn"
+            @click="resetKnowledgeSearch"
+          >
+            重置
+          </button>
+
+          <span class="total-count">
+            <template v-if="knowledgeSearchMode">
+              搜索结果共 {{ knowledgeTotal }} 条
+            </template>
+
+            <template v-else>
+              当前共 {{ knowledgeTotal }} 条知识库数据，当前第 {{ knowledgePageNum }} 页
+            </template>
+          </span>
         </div>
 
         <table class="data-table">
@@ -182,6 +220,31 @@
             </tr>
           </tbody>
         </table>
+
+        <div
+          v-if="!knowledgeSearchMode && knowledgeTotal > 0"
+          class="pager"
+        >
+          <button
+            class="page-btn"
+            :disabled="knowledgePageNum <= 1"
+            @click="prevKnowledgePage"
+          >
+            上一页
+          </button>
+
+          <span class="page-info">
+            第 {{ knowledgePageNum }} 页 / 共 {{ Math.ceil(knowledgeTotal / knowledgePageSize) }} 页
+          </span>
+
+          <button
+            class="page-btn"
+            :disabled="knowledgePageNum >= Math.ceil(knowledgeTotal / knowledgePageSize)"
+            @click="nextKnowledgePage"
+          >
+            下一页
+          </button>
+        </div>
 
         <div
           v-if="knowledgeList.length === 0"
@@ -322,6 +385,7 @@ import { useRouter } from 'vue-router'
 import { getAllFeedback, replyFeedback } from '../api/feedback'
 import {
   getAdminKnowledgeList,
+  searchAdminKnowledge,
   addKnowledge,
   updateKnowledge,
   deleteKnowledge
@@ -329,7 +393,7 @@ import {
 
 const router = useRouter()
 
-const activeMenu = ref('feedback')
+const activeMenu = ref('knowledge')
 
 // ====================== 用户反馈管理 ======================
 const feedbackList = ref([])
@@ -400,9 +464,16 @@ const submitReply = async () => {
 
 // ====================== 知识库管理 ======================
 const knowledgeList = ref([])
+const knowledgeTotal = ref(0)
+const knowledgePageNum = ref(1)
+const knowledgePageSize = ref(50)
 const knowledgeDialogVisible = ref(false)
 const knowledgeDialogMode = ref('add')
 const knowledgeLoading = ref(false)
+
+const knowledgeKeyword = ref('')
+const knowledgeSearchLoading = ref(false)
+const knowledgeSearchMode = ref(false)
 
 const emptyKnowledgeForm = () => ({
   id: null,
@@ -417,11 +488,17 @@ const emptyKnowledgeForm = () => ({
 const knowledgeForm = ref(emptyKnowledgeForm())
 
 const loadKnowledge = async () => {
+  knowledgeSearchMode.value = false
+
   try {
-    const res = await getAdminKnowledgeList()
+    const res = await getAdminKnowledgeList(
+      knowledgePageNum.value,
+      knowledgePageSize.value
+    )
 
     if (res.data.code === '200' || res.data.code === 200) {
       knowledgeList.value = res.data.data || []
+      knowledgeTotal.value = res.data.total || 0
     } else {
       alert(res.data.msg || '获取知识库失败')
     }
@@ -429,6 +506,72 @@ const loadKnowledge = async () => {
     console.error('获取知识库失败：', error)
     alert('获取知识库失败，请检查管理员权限或后端接口')
   }
+}
+
+const searchKnowledge = async () => {
+  const keyword = knowledgeKeyword.value.trim()
+
+  if (!keyword) {
+    await resetKnowledgeSearch()
+    return
+  }
+
+  knowledgeSearchLoading.value = true
+
+  try {
+    const res = await searchAdminKnowledge(keyword)
+
+    if (res.data.code === '200' || res.data.code === 200) {
+      const list = res.data.data || []
+
+      knowledgeList.value = list
+      knowledgeTotal.value = list.length
+      knowledgePageNum.value = 1
+      knowledgeSearchMode.value = true
+    } else {
+      alert(res.data.msg || '搜索失败')
+    }
+  } catch (error) {
+    console.error('搜索知识库失败：', error)
+    alert('搜索失败，请检查后端搜索接口或管理员权限')
+  } finally {
+    knowledgeSearchLoading.value = false
+  }
+}
+
+const resetKnowledgeSearch = async () => {
+  knowledgeKeyword.value = ''
+  knowledgeSearchMode.value = false
+  knowledgePageNum.value = 1
+  await loadKnowledge()
+}
+
+const reloadKnowledgeAfterChange = async () => {
+  if (knowledgeSearchMode.value && knowledgeKeyword.value.trim()) {
+    await searchKnowledge()
+  } else {
+    await loadKnowledge()
+  }
+}
+
+const prevKnowledgePage = () => {
+  if (knowledgePageNum.value <= 1) {
+    return
+  }
+
+  knowledgePageNum.value--
+  loadKnowledge()
+}
+
+const nextKnowledgePage = () => {
+  const totalPage = Math.ceil(knowledgeTotal.value / knowledgePageSize.value)
+
+  if (knowledgePageNum.value >= totalPage) {
+    return
+  }
+
+  knowledgePageNum.value++
+  loadKnowledge()
 }
 
 const openAddKnowledgeDialog = () => {
@@ -483,7 +626,7 @@ const submitKnowledge = async () => {
     if (res.data.code === '200' || res.data.code === 200) {
       alert(knowledgeDialogMode.value === 'add' ? '新增成功' : '修改成功')
       closeKnowledgeDialog()
-      loadKnowledge()
+      await reloadKnowledgeAfterChange()
     } else {
       alert(res.data.msg || '保存失败')
     }
@@ -507,7 +650,7 @@ const deleteKnowledgeItem = async (id) => {
 
     if (res.data.code === '200' || res.data.code === 200) {
       alert('删除成功')
-      loadKnowledge()
+      await reloadKnowledgeAfterChange()
     } else {
       alert(res.data.msg || '删除失败')
     }
@@ -550,6 +693,7 @@ const logout = () => {
 
 onMounted(() => {
   loadFeedback()
+  loadKnowledge()
 })
 </script>
 
@@ -568,9 +712,19 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
-.admin-sidebar h2 {
-  text-align: center;
+.admin-logo-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 30px;
+  padding-top: 4px;
+}
+
+.admin-logo {
+  width: 150px;
+  max-width: 86%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
 }
 
 .admin-menu {
@@ -617,6 +771,12 @@ onMounted(() => {
   margin-bottom: 16px;
   display: flex;
   gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.knowledge-toolbar {
+  align-items: center;
 }
 
 .refresh-btn,
@@ -635,6 +795,64 @@ onMounted(() => {
 
 .add-btn {
   background: #10b981;
+}
+
+.knowledge-search-input {
+  width: 360px;
+  height: 38px;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  font-size: 14px;
+  outline: none;
+  background: #ffffff;
+}
+
+.knowledge-search-input:focus {
+  border-color: #1677ff;
+}
+
+.search-btn,
+.reset-btn {
+  height: 38px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.search-btn {
+  background: #1677ff;
+  color: #ffffff;
+}
+
+.search-btn:hover {
+  background: #0f66d8;
+}
+
+.search-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.reset-btn {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.reset-btn:hover {
+  background: #d1d5db;
+}
+
+.total-count {
+  display: flex;
+  align-items: center;
+  margin-left: 12px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .data-table {
@@ -822,5 +1040,33 @@ onMounted(() => {
   box-sizing: border-box;
   font-size: 14px;
   outline: none;
+}
+
+.pager {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-btn {
+  height: 36px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 8px;
+  background: #1677ff;
+  color: #fff;
+  cursor: pointer;
+}
+
+.page-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.page-info {
+  color: #374151;
+  font-weight: 600;
 }
 </style>

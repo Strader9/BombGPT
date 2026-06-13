@@ -2,7 +2,13 @@
   <div class="chat-layout">
     <!-- 左侧功能栏 -->
     <aside class="sidebar">
-      <h2 class="sidebar-title">校园功能</h2>
+     <div class="sidebar-logo-box">
+  <img
+    src="/bbg-logo.png"
+    alt="BBG Logo"
+    class="sidebar-logo"
+  />
+</div>
 
       <!-- 新对话 -->
       <div
@@ -74,19 +80,7 @@
           💬 智能问答
         </div>
 
-        <div
-          class="menu-item"
-          @click="goHome"
-        >
-          🍚 食堂餐饮
-        </div>
 
-        <div
-          class="menu-item"
-          @click="goHome"
-        >
-          📚 图书馆服务
-        </div>
 
         <div
           class="menu-item"
@@ -750,9 +744,6 @@ const goChat = () => {
   router.push('/chat')
 }
 
-const goHome = () => {
-  router.push('/home')
-}
 
 const goAdmin = () => {
   router.push('/admin').catch(() => {
@@ -799,11 +790,19 @@ onMounted(() => {
   flex-direction: column;
 }
 
-.sidebar-title {
-  text-align: center;
-  margin: 0 0 18px;
-  font-size: 22px;
-  color: #111827;
+.sidebar-logo-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 26px;
+  padding-top: 4px;
+}
+
+.sidebar-logo {
+  width: 150px;
+  max-width: 86%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.10));
 }
 
 .new-chat-btn {
