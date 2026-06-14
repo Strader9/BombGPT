@@ -1,0 +1,153 @@
+# =========================
+# 通用系统文件
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# IDE / 编辑器
+# =========================
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# =========================
+# Java / SpringBoot / Maven
+# =========================
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven wrapper 可保留，下面这些不忽略
+!mvnw
+!mvnw.cmd
+!.mvn/wrapper/maven-wrapper.jar
+
+# =========================
+# 日志文件
+# =========================
+logs/
+*.log
+*.out
+*.err
+
+# =========================
+# 前端 Node / Vue / Vite
+# =========================
+node_modules/
+dist/
+dist-ssr/
+.vite/
+.cache/
+coverage/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# 环境变量 / 敏感配置
+# =========================
+.env
+.env.*
+!.env.example
+
+application-local.yml
+application-local.yaml
+application-secret.yml
+application-secret.yaml
+application-prod.yml
+application-prod.yaml
+
+# 如果 application.yml 里还写着真实密码，就取消下一行注释
+# application.yml
+
+# =========================
+# 数据库备份 / 导入文件
+# =========================
+*.sql
+*.dump
+*.bak
+*.backup
+
+# 允许保留数据库结构说明文件
+!schema.sql
+!database_schema.sql
+!init.sql
+
+# =========================
+# 爬虫输出 / 大数据文件
+# =========================
+*.jsonl
+*.csv
+*.xlsx
+*.xls
+*.db
+*.sqlite
+*.sqlite3
+
+# 如果你有必须提交的小型示例数据，可以放到 docs/example/ 下
+!docs/example/*.csv
+!docs/example/*.json
+!docs/example/*.sql
+
+# =========================
+# Python 临时文件
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# =========================
+# Netlify / 部署临时文件
+# =========================
+.netlify/
+
+# =========================
+# ngrok / Cloudflare 隧道配置
+# =========================
+ngrok.yml
+cloudflared/
+.cloudflare/
+.cloudflared/
+
+# =========================
+# 临时文件
+# =========================
+tmp/
+temp/
+*.tmp
+*.temp
+
+# =========================
+# Office 临时文件
+# =========================
+~$*.doc
+~$*.docx
+~$*.ppt
+~$*.pptx
+~$*.xls
+~$*.xlsx
+
+# =========================
+# 压缩包 / 提交包
+# =========================
+*.zip
+*.rar
+*.7z
+
+# =========================
+# 周报 / 临时交付文档
+# =========================
+weekly-report/
+docs/**/*.doc
+docs/**/*.docx

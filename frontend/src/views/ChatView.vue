@@ -129,12 +129,24 @@
           class="message-row"
           :class="msg.role"
         >
-          <!-- AI 回复：Markdown 渲染 -->
-          <div
-            v-if="msg.role === 'assistant'"
-            class="message-bubble markdown-body"
-            v-html="renderMarkdown(msg.content)"
-          ></div>
+         <!-- AI 回复：Markdown 渲染 + 来源标签 -->
+<div
+  v-if="msg.role === 'assistant'"
+  class="assistant-bubble-wrap"
+>
+  <div
+    class="message-bubble markdown-body"
+    v-html="renderMarkdown(msg.content)"
+  ></div>
+
+  <div
+    v-if="msg.sourceLabel"
+    class="ai-source-label"
+    :class="getSourceClass(msg.sourceType)"
+  >
+    {{ msg.sourceLabel }}
+  </div>
+</div>
 
           <!-- 用户消息：普通文本 -->
           <div
@@ -362,6 +374,22 @@ const renderMarkdown = (content) => {
   return md.render(content || '')
 }
 
+const getSourceClass = (sourceType) => {
+  if (sourceType === 'SYSTEM') {
+    return 'source-system'
+  }
+
+  if (sourceType === 'AI_CAUTIOUS') {
+    return 'source-cautious'
+  }
+
+  if (sourceType === 'HISTORY') {
+    return 'source-history'
+  }
+
+  return 'source-knowledge'
+}
+
 // ====================== 重命名弹窗 ======================
 const renameDialogVisible = ref(false)
 const renameTitle = ref('')
@@ -370,7 +398,9 @@ const renameTarget = ref(null)
 const getDefaultMessages = () => [
   {
     role: 'assistant',
-    content: '你好！我是校园助手，你可以问我食堂、宿舍、校历、图书馆、办事流程等校园问题。'
+    content: '你好！我是 BBG 校园生活百事通，你可以问我食堂、宿舍、校园卡、图书馆、教务通知、办事流程等校园问题。',
+    sourceType: 'SYSTEM',
+    sourceLabel: '系统提示'
   }
 ]
 
@@ -445,10 +475,12 @@ const loadConversationMessages = async (conversation) => {
       if (list.length === 0) {
         messages.value = getDefaultMessages()
       } else {
-        messages.value = list.map(item => ({
-          role: item.role,
-          content: item.content
-        }))
+       messages.value = list.map(item => ({
+  role: item.role,
+  content: item.content,
+  sourceType: item.role === 'assistant' ? 'HISTORY' : '',
+  sourceLabel: item.role === 'assistant' ? '历史回答' : ''
+}))
       }
 
       await scrollToBottom()
@@ -594,17 +626,21 @@ const sendMessage = async () => {
       ? `以下是当前对话的历史上下文：\n${historyContext}\n\n用户现在的问题是：\n${text}\n\n请结合上下文回答用户现在的问题。`
       : text
 
-    messages.value.push({
-      role: 'user',
-      content: text
-    })
+   messages.value.push({
+  role: 'user',
+  content: text,
+  sourceType: '',
+  sourceLabel: ''
+})
 
     question.value = ''
 
     messages.value.push({
-      role: 'assistant',
-      content: '正在思考中...'
-    })
+  role: 'assistant',
+  content: '正在思考中...',
+  sourceType: '',
+  sourceLabel: ''
+})
 
     assistantIndex = messages.value.length - 1
 
@@ -616,13 +652,18 @@ const sendMessage = async () => {
       console.error('保存用户消息失败：', error)
     }
 
-    const res = await chatWithAi(questionWithContext)
-    const answer = res.data.answer || 'AI 没有返回答案'
+   const res = await chatWithAi(questionWithContext)
 
-    messages.value[assistantIndex] = {
-      role: 'assistant',
-      content: answer
-    }
+const answer = res.data.answer || 'AI 没有返回答案'
+const sourceType = res.data.sourceType || 'AI_KNOWLEDGE'
+const sourceLabel = res.data.sourceLabel || 'AI 整理自校园知识库'
+
+messages.value[assistantIndex] = {
+  role: 'assistant',
+  content: answer,
+  sourceType,
+  sourceLabel
+}
 
     try {
       await saveChatMessage('assistant', answer)
@@ -637,10 +678,12 @@ const sendMessage = async () => {
     const errorMsg = '请求失败，请检查后端是否启动、/ai/chat 是否加入白名单、Ollama 是否正在运行。'
 
     if (assistantIndex !== -1) {
-      messages.value[assistantIndex] = {
-        role: 'assistant',
-        content: errorMsg
-      }
+     messages.value[assistantIndex] = {
+  role: 'assistant',
+  content: errorMsg,
+  sourceType: 'SYSTEM',
+  sourceLabel: '系统提示'
+}
 
       try {
         await saveChatMessage('assistant', errorMsg)
@@ -1338,6 +1381,50 @@ onMounted(() => {
   border: none;
   border-top: 1px solid #e5e7eb;
   margin: 16px 0;
+}
+
+/* AI 来源小标签 */
+.assistant-bubble-wrap {
+  max-width: 70%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.assistant-bubble-wrap .message-bubble {
+  max-width: 100%;
+}
+
+.ai-source-label {
+  align-self: flex-end;
+  margin-top: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #9ca3af;
+  background: rgba(156, 163, 175, 0.12);
+  user-select: none;
+}
+
+.ai-source-label.source-knowledge {
+  color: #b8aa86;
+  background: rgba(255, 242, 212, 0.10);
+}
+
+.ai-source-label.source-cautious {
+  color: #d0a85f;
+  background: rgba(208, 168, 95, 0.12);
+}
+
+.ai-source-label.source-system {
+  color: #9ca3af;
+  background: rgba(156, 163, 175, 0.12);
+}
+
+.ai-source-label.source-history {
+  color: #a7a7a7;
+  background: rgba(167, 167, 167, 0.10);
 }
 </style>
 
