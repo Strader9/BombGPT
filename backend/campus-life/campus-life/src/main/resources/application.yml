@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/bomb?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  expire: 86400000
+
+ai:
+  url: http://localhost:11434/v1/chat/completions
+  model: campus_helper
+
+  # AI 检索调试开关
+  # true：开发时打印检索词、命中知识、相似度分数
+  # false：演示或部署时关闭
+  debug: false
+
+  # 低置信度兜底分数
+  # 如果知识库最高相似度低于该分数，则不强行使用知识库回答
+  min-score: 1000
